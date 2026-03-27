@@ -198,3 +198,19 @@ The binary content never touches the Domain layer.
 ### Q24: What's the difference between `pullDomainEvents()` and `peekDomainEvents()`?
 
 **Answer:** `pullDomainEvents()` returns events and **clears the queue** — this is what you use in production to ensure each event is dispatched exactly once. `peekDomainEvents()` returns events **without clearing** — this is for testing and debugging, when you want to inspect what happened without affecting dispatch semantics. This distinction prevents a common bug: accidentally dispatching events twice when checking them before saving.
+
+---
+
+### Q25: How does PHP handle threads and concurrency? Is it blocking or non-blocking?
+
+**Answer:** PHP uses a **shared-nothing, process-per-request** model. Each HTTP request gets its own process, runs synchronously from top to bottom, blocks on every I/O call (database, file, network), and dies when done. There's no event loop, no threads, no `async/await`.
+
+This gives PHP two major advantages over threaded/async models:
+1. **No race conditions** — each request is completely isolated, there's no shared memory between processes.
+2. **No memory leaks** — the process dies after each request, so everything is garbage-collected automatically.
+
+Concurrency is handled at the **web server level** by Nginx + PHP-FPM (FastCGI Process Manager), which maintains a pool of worker processes (typically 10-50). Nginx routes incoming requests to available workers in parallel.
+
+For our DAM system, this is ideal — each API call is a short-lived operation: read from database, apply business rules, write back, respond. This is exactly what PHP-FPM is optimized for.
+
+If I needed real-time features (WebSockets, long-polling), I'd look at **Swoole** or **ReactPHP** — they provide an event loop similar to Node.js. PHP 8.1 also introduced **Fibers** for cooperative multitasking, which frameworks like Laravel Octane use internally to keep the application in memory between requests.

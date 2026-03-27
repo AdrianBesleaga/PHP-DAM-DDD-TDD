@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 use App\Infrastructure\Http\AssetController;
 use App\Infrastructure\Http\FolderController;
+use App\Infrastructure\Http\GraphQLController;
+use App\Infrastructure\Http\Middleware\CorsMiddleware;
 use App\Infrastructure\Http\Middleware\JsonErrorMiddleware;
+use App\Infrastructure\Http\Middleware\JwtAuthMiddleware;
+use App\Infrastructure\Http\Middleware\SecurityHeadersMiddleware;
 use App\Infrastructure\Http\UserController;
 use DI\ContainerBuilder;
-use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
-use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
+
+// ============================================================
+// ENVIRONMENT — Load .env secrets
+// ============================================================
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->safeLoad(); // Won't throw if .env is missing (e.g. in production with real env vars)
 
 // ============================================================
 // COMPOSITION ROOT — DI Container + Slim App
@@ -28,17 +37,41 @@ $container = $containerBuilder->build();
 $app = \DI\Bridge\Slim\Bridge::create($container);
 
 // ============================================================
-// MIDDLEWARE STACK
+// MIDDLEWARE STACK (Slim uses LIFO — last added runs first)
+//
+//   Execution order:
+//   1. JsonErrorMiddleware      ← catches ALL exceptions (including auth)
+//   2. SecurityHeadersMiddleware ← adds defensive headers
+//   3. CorsMiddleware            ← handles CORS + OPTIONS preflight
+//   4. JwtAuthMiddleware         ← validates Bearer token
+//   5. RoutingMiddleware         ← resolves the route
+//   6. BodyParsingMiddleware     ← parses JSON body
 // ============================================================
 
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 
-// Custom JSON error middleware — replaces Slim's default HTML error pages
+// JWT Authentication — protects /api/* routes, skips public paths
+$jwtSecret = $_ENV['JWT_SECRET'] ?? 'fallback-dev-secret';
+$app->addMiddleware(new JwtAuthMiddleware(
+    responseFactory: $app->getResponseFactory(),
+    jwtSecret: $jwtSecret,
+    publicPaths: ['/', '/graphql'],
+));
+
+// CORS — allows cross-origin requests from frontend apps
+$app->addMiddleware(new CorsMiddleware(
+    responseFactory: $app->getResponseFactory(),
+));
+
+// Security Headers — defense-in-depth on every response
+$app->addMiddleware(new SecurityHeadersMiddleware());
+
+// Error Handling — catches everything, maps exceptions to JSON responses
 $app->addMiddleware(new JsonErrorMiddleware(
     responseFactory: $app->getResponseFactory(),
     logger: $container->get(LoggerInterface::class),
-    debug: true, // Set to false in production
+    debug: ($_ENV['APP_DEBUG'] ?? 'true') === 'true',
 ));
 
 // ============================================================
@@ -51,12 +84,15 @@ $app->get('/', function (Request $request, Response $response) {
         'name' => 'PHP DDD-TDD DAM System',
         'version' => '3.0.0',
         'architecture' => 'DDD / Hexagonal / SOLID / ACID-Ready',
-        'features' => [
+         'features' => [
             'Domain Events',
             'Doctrine ORM (SQLite)',
             'DI Container (PHP-DI)',
             'PSR-3 Logging (Monolog)',
             'Centralized Error Middleware',
+            'GraphQL API',
+            'OpenAPI 3.1 Documentation',
+            'PHPStan Level 8',
         ],
         'domains' => [
             'users' => [
@@ -86,10 +122,14 @@ $app->get('/', function (Request $request, Response $response) {
                 'PUT /api/folders/{id}' => 'Rename a folder',
                 'DELETE /api/folders/{id}' => 'Delete a folder',
             ],
+            'graphql' => [
+                'POST /graphql' => 'GraphQL endpoint (queries for users, assets, folders)',
+            ],
         ],
+        'documentation' => 'docs/openapi.yaml (OpenAPI 3.1)',
     ];
 
-    $response->getBody()->write(json_encode($info, JSON_PRETTY_PRINT));
+    $response->getBody()->write((string) json_encode($info, JSON_PRETTY_PRINT));
     return $response->withHeader('Content-Type', 'application/json');
 });
 
@@ -119,5 +159,8 @@ $app->get('/api/folders/{id}/subfolders', [FolderController::class, 'subfolders'
 $app->post('/api/folders', [FolderController::class, 'create']);
 $app->put('/api/folders/{id}', [FolderController::class, 'rename']);
 $app->delete('/api/folders/{id}', [FolderController::class, 'delete']);
+
+// --- GraphQL ---
+$app->post('/graphql', [GraphQLController::class, 'handle']);
 
 $app->run();

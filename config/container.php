@@ -13,6 +13,7 @@ use App\Domain\Repository\UserRepositoryInterface;
 use App\Infrastructure\Event\SimpleEventDispatcher;
 use App\Infrastructure\Http\AssetController;
 use App\Infrastructure\Http\FolderController;
+use App\Infrastructure\Http\GraphQLController;
 use App\Infrastructure\Http\UserController;
 use App\Infrastructure\Persistence\InMemoryAssetRepository;
 use App\Infrastructure\Persistence\InMemoryFolderRepository;
@@ -68,4 +69,5 @@ return [
     UserController::class => DI\autowire(),
     AssetController::class => DI\autowire(),
     FolderController::class => DI\autowire(),
+    GraphQLController::class => DI\autowire(),
 ];

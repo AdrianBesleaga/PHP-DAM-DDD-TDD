@@ -1,0 +1,573 @@
+openapi: "3.1.0"
+info:
+  title: PHP DDD-TDD DAM System
+  description: |
+    Digital Asset Management API built with Domain-Driven Design,
+    Hexagonal Architecture, and SOLID principles.
+  version: "3.0.0"
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Users
+    description: User management and lifecycle
+  - name: Assets
+    description: Digital asset upload, lifecycle, and organization
+  - name: Folders
+    description: Folder hierarchy for organizing assets
+  - name: GraphQL
+    description: GraphQL endpoint (alternative to REST)
+
+paths:
+  # ─── Users ──────────────────────────────────────────────────────
+  /api/users:
+    get:
+      tags: [Users]
+      summary: List all users
+      operationId: listUsers
+      responses:
+        "200":
+          description: Array of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+    post:
+      tags: [Users]
+      summary: Create a new user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      operationId: getUser
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Users]
+      summary: Update a user
+      operationId: updateUser
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User updated
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      operationId: deleteUser
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/users/{id}/suspend:
+    post:
+      tags: [Users]
+      summary: Suspend a user
+      operationId: suspendUser
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User suspended
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/users/{id}/reactivate:
+    post:
+      tags: [Users]
+      summary: Reactivate a suspended user
+      operationId: reactivateUser
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User reactivated
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ─── Assets ─────────────────────────────────────────────────────
+  /api/assets:
+    get:
+      tags: [Assets]
+      summary: List all assets
+      operationId: listAssets
+      responses:
+        "200":
+          description: Array of assets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Asset"
+    post:
+      tags: [Assets]
+      summary: Upload a new asset
+      operationId: uploadAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadAssetRequest"
+      responses:
+        "201":
+          description: Asset uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Asset"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/assets/{id}:
+    get:
+      tags: [Assets]
+      summary: Get asset by ID
+      operationId: getAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset found
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Assets]
+      summary: Delete an asset
+      operationId: deleteAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/assets/{id}/publish:
+    post:
+      tags: [Assets]
+      summary: Publish an asset (Draft → Published)
+      description: Requires the asset to have a description.
+      operationId: publishAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset published
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Business rule violation (no description, wrong state)
+
+  /api/assets/{id}/archive:
+    post:
+      tags: [Assets]
+      summary: Archive an asset (Published → Archived)
+      operationId: archiveAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset archived
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/assets/{id}/restore:
+    post:
+      tags: [Assets]
+      summary: Restore to draft (Archived → Draft)
+      operationId: restoreAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Asset restored to draft
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/assets/{id}/move:
+    post:
+      tags: [Assets]
+      summary: Move asset to a folder
+      operationId: moveAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folder_id]
+              properties:
+                folder_id:
+                  type: integer
+                  example: 3
+      responses:
+        "200":
+          description: Asset moved
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─── Folders ────────────────────────────────────────────────────
+  /api/folders:
+    get:
+      tags: [Folders]
+      summary: List root folders
+      operationId: listRootFolders
+      responses:
+        "200":
+          description: Array of root folders
+    post:
+      tags: [Folders]
+      summary: Create a new folder
+      operationId: createFolder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFolderRequest"
+      responses:
+        "201":
+          description: Folder created
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/folders/{id}:
+    get:
+      tags: [Folders]
+      summary: Get folder by ID
+      operationId: getFolder
+      parameters:
+        - $ref: "#/components/parameters/FolderId"
+      responses:
+        "200":
+          description: Folder found
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Folders]
+      summary: Rename a folder
+      operationId: renameFolder
+      parameters:
+        - $ref: "#/components/parameters/FolderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: "Renamed Folder"
+      responses:
+        "200":
+          description: Folder renamed
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Folders]
+      summary: Delete a folder
+      operationId: deleteFolder
+      parameters:
+        - $ref: "#/components/parameters/FolderId"
+      responses:
+        "200":
+          description: Folder deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/folders/{id}/subfolders:
+    get:
+      tags: [Folders]
+      summary: List subfolders
+      operationId: listSubfolders
+      parameters:
+        - $ref: "#/components/parameters/FolderId"
+      responses:
+        "200":
+          description: Array of subfolders
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─── GraphQL ────────────────────────────────────────────────────
+  /graphql:
+    post:
+      tags: [GraphQL]
+      summary: GraphQL endpoint
+      description: |
+        Supports queries for users, assets, and folders.
+        Uses the same Application Services as the REST API.
+      operationId: graphql
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  example: '{ users { id name email status } }'
+                variables:
+                  type: object
+            examples:
+              listUsers:
+                summary: List all users
+                value:
+                  query: "{ users { id name email status } }"
+              getAsset:
+                summary: Get asset by ID
+                value:
+                  query: "{ asset(id: 1) { id fileName status tags } }"
+              listFolders:
+                summary: List root folders with subfolders
+                value:
+                  query: "{ folders { id name isRoot } }"
+      responses:
+        "200":
+          description: GraphQL response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+
+components:
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+    AssetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+    FolderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Alice Smith"
+        email:
+          type: string
+          format: email
+          example: "alice@example.com"
+        status:
+          type: string
+          enum: [active, suspended]
+          example: "active"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Asset:
+      type: object
+      properties:
+        id:
+          type: integer
+        file_name:
+          type: string
+          example: "hero-banner.jpg"
+        file_size:
+          type: integer
+          example: 2048000
+        mime_type:
+          type: string
+          example: "image/jpeg"
+        status:
+          type: string
+          enum: [draft, published, archived]
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        folder_id:
+          type: integer
+          nullable: true
+        uploaded_by:
+          type: integer
+
+    CreateUserRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: "Alice Smith"
+        email:
+          type: string
+          format: email
+          example: "alice@example.com"
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    UploadAssetRequest:
+      type: object
+      required: [file_name, file_size, mime_type, uploaded_by]
+      properties:
+        file_name:
+          type: string
+          example: "photo.jpg"
+        file_size:
+          type: integer
+          example: 2048000
+        mime_type:
+          type: string
+          example: "image/jpeg"
+        uploaded_by:
+          type: integer
+          example: 1
+        folder_id:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
+    CreateFolderRequest:
+      type: object
+      required: [name, created_by]
+      properties:
+        name:
+          type: string
+          example: "Marketing"
+        created_by:
+          type: integer
+          example: 1
+        parent_id:
+          type: integer
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "User not found with ID: 42"
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: Validation or business rule error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

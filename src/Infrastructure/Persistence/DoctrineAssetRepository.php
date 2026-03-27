@@ -42,21 +42,18 @@ final class DoctrineAssetRepository implements AssetRepositoryInterface
     public function findByTag(string $tag): array
     {
         // TODO: This LIKE-based JSON search is a pragmatic shortcut for SQLite.
-        // Limitations:
-        //   - Tags containing '%' would produce overly broad matches
-        //   - Depends on json_encode wrapping values in double quotes
-        // Production fix: Use a dedicated `asset_tags` junction table:
-        //   SELECT a.* FROM assets a
-        //   JOIN asset_tags t ON a.id = t.asset_id
-        //   WHERE t.tag = :tag
-        // Or with MySQL 5.7+: JSON_CONTAINS(a.tags, :tag)
+        // Production fix: Use a dedicated `asset_tags` junction table.
         $tag = strtolower(trim($tag));
+
+        // Escape LIKE wildcards to prevent SQL injection via pattern manipulation.
+        // Without this, a tag like "%" would match ALL assets.
+        $escapedTag = str_replace(['%', '_'], ['\\%', '\\_'], $tag);
 
         return $this->em->createQueryBuilder()
             ->select('a')
             ->from(Asset::class, 'a')
             ->where('a.tags LIKE :tag')
-            ->setParameter('tag', '%"' . $tag . '"%')
+            ->setParameter('tag', '%"' . $escapedTag . '"%')
             ->getQuery()
             ->getResult();
     }
