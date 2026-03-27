@@ -23,6 +23,44 @@ Deployment              php -S localhost            K8s / ECS + auto-scaling
 
 ---
 
+## 0. Framework Strategy
+
+### Why Slim 4 (Current)
+
+Slim was chosen intentionally to demonstrate that the architecture is **framework-independent**:
+- **Zero magic** — every line is explicit (DI wiring, middleware, routing). Interviewers see exactly how the system works, not framework abstractions.
+- **PSR-compliant** — PSR-7 (HTTP), PSR-11 (Container), PSR-15 (Middleware). These are industry standards, not framework-specific APIs.
+- **DDD-friendly** — Slim doesn't impose structure. We designed our own layers instead of fitting into MVC.
+
+### Why Symfony (Production)
+
+| Concern | Slim 4 (demo) | Symfony (production) |
+|---------|---------------|---------------------|
+| Routing | Manual `$app->get(...)` | `#[Route]` attributes (auto-discovery) |
+| DI | PHP-DI (manual wiring) | Autowiring (automatic) |
+| Async | `SimpleEventDispatcher` | Symfony Messenger (SQS, RabbitMQ) |
+| CLI | None | `bin/console` (migrations, cache, debug) |
+| Auth | Custom JWT middleware | LexikJWTAuthenticationBundle |
+| Validation | Manual in VOs/DTOs | Symfony Validator (annotations) |
+| Config | `.env` + manual | Flex recipes (auto-configuration) |
+
+### Migration Cost (Slim → Symfony)
+
+```
+Layer              Files    Changes Needed
+──────────────     ─────    ──────────────
+Domain   (13)      VOs, Entities, Events, Interfaces    ZERO changes
+Application (7)    Services, DTOs, Handlers             ZERO changes
+Infrastructure     Controllers, Repos, Middleware       Rewrite (adapt to Symfony)
+Config             container.php, routes                Rewrite (services.yaml)
+──────────────────────────────────────────────────────────────
+Total: 28% of codebase changes. 72% stays identical.
+```
+
+This is the whole point of Hexagonal Architecture: **the framework is a detail, not a foundation**. The Domain and Application layers — where all business logic lives — would be copy-pasted unchanged into a Symfony project.
+
+---
+
 ## 1. Storage Layer
 
 ### 1.1 Object Storage (Amazon S3)

@@ -233,6 +233,45 @@ This replaced ~67 lines of repetitive try/catch across 3 controllers.
 
 ---
 
+## Framework Strategy
+
+**Slim 4** was chosen intentionally — not because it's the best production framework, but because it's the best framework to **demonstrate architecture**:
+
+- **Zero magic**: every DI binding, middleware registration, and route is explicit — interviewers see exactly how the system works
+- **PSR-compliant**: PSR-7, PSR-11, PSR-15 — industry standards, not vendor-specific APIs
+- **Framework-independent architecture**: Domain and Application layers have zero framework imports
+
+**For production**, migrate to **Symfony** — same Domain/Application layers, rewrite only Infrastructure:
+
+```
+Domain (13 files)      → ZERO changes   (72% of codebase preserved)
+Application (7 files)  → ZERO changes
+Infrastructure         → Rewrite for Symfony
+Config                 → Rewrite (services.yaml)
+```
+
+See `PRODUCTION.md` → Section 0 for full comparison.
+
+---
+
+## Production Readiness
+
+This demo runs on SQLite + Slim. See `PRODUCTION.md` for the enterprise scaling plan:
+
+| Concern | Demo | Production |
+|---------|------|------------|
+| Database | SQLite | PostgreSQL + read replicas |
+| Storage | Local | S3 + CloudFront CDN |
+| Events | Synchronous | SQS + async workers |
+| Cache | None | Redis cluster |
+| Search | LIKE on JSON | Elasticsearch |
+| Framework | Slim 4 | Symfony |
+| Monitoring | File logs | Grafana + Prometheus + OpenTelemetry |
+
+All production changes require **zero Domain layer modifications** — that's Hexagonal Architecture.
+
+---
+
 ## Testing Strategy
 
 ### Test Pyramid
