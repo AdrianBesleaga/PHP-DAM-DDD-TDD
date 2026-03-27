@@ -214,3 +214,30 @@ Concurrency is handled at the **web server level** by Nginx + PHP-FPM (FastCGI P
 For our DAM system, this is ideal — each API call is a short-lived operation: read from database, apply business rules, write back, respond. This is exactly what PHP-FPM is optimized for.
 
 If I needed real-time features (WebSockets, long-polling), I'd look at **Swoole** or **ReactPHP** — they provide an event loop similar to Node.js. PHP 8.1 also introduced **Fibers** for cooperative multitasking, which frameworks like Laravel Octane use internally to keep the application in memory between requests.
+
+---
+
+### Q26: This system handles 100 assets. How would you scale it to 1 million?
+
+**Answer:** Five changes, zero domain code modifications:
+
+1. **Database**: Replace SQLite with PostgreSQL + read replicas. Connection pooling via PgBouncer. Migrate tags from JSON column to a junction table with indexes.
+2. **Storage**: Move binaries to S3 with CloudFront CDN. Use pre-signed URLs — never proxy files through the API. Content-addressed storage (SHA-256) for deduplication.
+3. **Async processing**: Replace `SimpleEventDispatcher` with `SqsEventDispatcher` — one line in the DI container. Thumbnail generation, search indexing, and notifications run as background workers consuming from SQS.
+4. **Caching**: Redis for frequently-read data (asset metadata, folder trees). Cache invalidation via our existing Domain Events pattern — when `AssetPublished` fires, a handler invalidates the cache.
+5. **Search**: Replace LIKE queries with Elasticsearch. Async indexing via SQS workers. Supports faceted search, fuzzy matching, and sub-50ms queries across millions of documents.
+
+The architecture was designed for this: every infrastructure dependency is behind an interface. The Domain layer doesn't know whether it's talking to SQLite or PostgreSQL, local disk or S3, synchronous or async dispatch.
+
+---
+
+### Q27: How do you ensure observability in production?
+
+**Answer:** I follow Google's Four Golden Signals — Latency, Traffic, Errors, Saturation:
+
+1. **Structured logging**: JSON logs with correlation IDs (`X-Request-ID`). Every log line includes request context — when a request fails at 3 AM, I can trace the entire flow with one ID.
+2. **Distributed tracing**: OpenTelemetry SDK instruments every request across API → Database → S3 → SQS. Export to Jaeger or Datadog for flame graphs showing exactly where time is spent.
+3. **Metrics + dashboards**: Prometheus exports PHP-FPM metrics (active workers, request duration, queue depth). Grafana dashboards for real-time visibility.
+4. **Alerting**: PagerDuty for P1 (API down), Slack for P3 (slow queries). Alert on symptoms (error rate > 1%), not causes — let engineers investigate root causes.
+
+See `docs/PRODUCTION.md` for the full production architecture.

@@ -98,7 +98,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t dam-api:${{ github.sha }} .
+        run: docker build -t dam-api:local .
 
-      - name: Verify image size
-        run: docker images dam-api:${{ github.sha }} --format "Image size: {{.Size}}"
+      - name: Verify image built
+        run: docker image inspect dam-api:local > /dev/null 2>&1 && echo "Docker image built successfully"
