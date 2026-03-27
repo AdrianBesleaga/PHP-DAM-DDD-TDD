@@ -16,12 +16,12 @@ use App\Domain\ValueObject\UserId;
 /**
  * Application Service — orchestrates use cases by coordinating
  * between the Domain layer and Infrastructure.
- * 
+ *
  * Key DDD principles demonstrated:
  * - This service is THIN — it delegates to the Domain Entity for business rules
  * - It depends on the Repository INTERFACE, not a concrete class (DIP)
  * - It translates between DTOs (Application) and Entities (Domain)
- * 
+ *
  * For Java devs: this is like a @Service class in Spring Boot.
  */
 final class UserService
@@ -32,7 +32,7 @@ final class UserService
 
     /**
      * Use Case: Get a user's profile by ID.
-     * 
+     *
      * @throws UserNotFoundException
      */
     public function getUserById(int $id): User
@@ -49,7 +49,7 @@ final class UserService
 
     /**
      * Use Case: List all users.
-     * 
+     *
      * @return User[]
      */
     public function listUsers(): array
@@ -59,7 +59,7 @@ final class UserService
 
     /**
      * Use Case: Create a new user.
-     * 
+     *
      * @throws DuplicateEmailException
      * @throws \InvalidArgumentException
      */
@@ -86,7 +86,7 @@ final class UserService
 
     /**
      * Use Case: Update an existing user.
-     * 
+     *
      * @throws UserNotFoundException
      * @throws DuplicateEmailException
      */
@@ -119,7 +119,7 @@ final class UserService
 
     /**
      * Use Case: Suspend a user.
-     * 
+     *
      * @throws UserNotFoundException
      * @throws \DomainException if user can't be suspended
      */
@@ -134,7 +134,7 @@ final class UserService
 
     /**
      * Use Case: Reactivate a user.
-     * 
+     *
      * @throws UserNotFoundException
      * @throws \DomainException if user is already active
      */
@@ -149,7 +149,7 @@ final class UserService
 
     /**
      * Use Case: Delete a user.
-     * 
+     *
      * @throws UserNotFoundException
      */
     public function deleteUser(int $id): void

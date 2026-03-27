@@ -6,7 +6,7 @@ namespace App\Domain\ValueObject;
 
 /**
  * Value Object representing a validated email address.
- * 
+ *
  * Encapsulates the validation rule so it's impossible to create
  * an Email instance with an invalid address — "make illegal states unrepresentable."
  */

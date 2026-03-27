@@ -6,10 +6,10 @@ namespace App\Application\DTO;
 
 /**
  * Data Transfer Object for creating a new user.
- * 
+ *
  * DTOs are simple data carriers between layers.
  * PHP 8.1's readonly properties make them naturally immutable.
- * 
+ *
  * For Java devs: this is like a Java Record.
  */
 final readonly class CreateUserDTO
@@ -21,9 +21,10 @@ final readonly class CreateUserDTO
 
     /**
      * Factory method to create from a request array (e.g., JSON body).
-     * 
+     *
      * @throws \InvalidArgumentException if required fields are missing
      */
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
         if (!isset($data['name']) || trim($data['name']) === '') {

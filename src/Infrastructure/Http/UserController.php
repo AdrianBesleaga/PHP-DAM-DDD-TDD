@@ -30,6 +30,7 @@ final class UserController
         return $this->jsonResponse($response, ['data' => $data]);
     }
 
+    /** @param array<string, string> $args */
     public function show(Request $request, Response $response, array $args): Response
     {
         $user = $this->userService->getUserById((int) $args['id']);
@@ -39,22 +40,26 @@ final class UserController
 
     public function create(Request $request, Response $response): Response
     {
-        $body = $request->getParsedBody() ?? [];
+        /** @var array<string, mixed> $body */
+        $body = (array) ($request->getParsedBody() ?? []);
         $dto = CreateUserDTO::fromArray($body);
         $user = $this->userService->createUser($dto);
 
         return $this->jsonResponse($response, ['data' => $user->toArray()], 201);
     }
 
+    /** @param array<string, string> $args */
     public function update(Request $request, Response $response, array $args): Response
     {
-        $body = $request->getParsedBody() ?? [];
+        /** @var array<string, mixed> $body */
+        $body = (array) ($request->getParsedBody() ?? []);
         $dto = UpdateUserDTO::fromArray($body);
         $user = $this->userService->updateUser((int) $args['id'], $dto);
 
         return $this->jsonResponse($response, ['data' => $user->toArray()]);
     }
 
+    /** @param array<string, string> $args */
     public function suspend(Request $request, Response $response, array $args): Response
     {
         $user = $this->userService->suspendUser((int) $args['id']);
@@ -62,6 +67,7 @@ final class UserController
         return $this->jsonResponse($response, ['data' => $user->toArray()]);
     }
 
+    /** @param array<string, string> $args */
     public function reactivate(Request $request, Response $response, array $args): Response
     {
         $user = $this->userService->reactivateUser((int) $args['id']);
@@ -69,6 +75,7 @@ final class UserController
         return $this->jsonResponse($response, ['data' => $user->toArray()]);
     }
 
+    /** @param array<string, string> $args */
     public function delete(Request $request, Response $response, array $args): Response
     {
         $this->userService->deleteUser((int) $args['id']);
@@ -76,9 +83,10 @@ final class UserController
         return $this->jsonResponse($response, ['message' => 'User deleted successfully']);
     }
 
+    /** @param array<string, mixed> $data */
     private function jsonResponse(Response $response, array $data, int $status = 200): Response
     {
-        $response->getBody()->write(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $response->getBody()->write((string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return $response
             ->withHeader('Content-Type', 'application/json')

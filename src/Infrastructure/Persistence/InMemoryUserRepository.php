@@ -11,13 +11,13 @@ use App\Domain\ValueObject\UserId;
 
 /**
  * In-Memory implementation of UserRepositoryInterface.
- * 
+ *
  * This is an "Adapter" in Hexagonal Architecture.
  * It fulfills the contract defined by the Domain's Port (interface).
- * 
+ *
  * In a real application, you'd swap this for MySqlUserRepository
  * or DoctrineUserRepository — WITHOUT changing any Application or Domain code.
- * 
+ *
  * This is also perfect for testing — you can use this exact class
  * in integration tests instead of mocking.
  */
@@ -29,7 +29,7 @@ final class InMemoryUserRepository implements UserRepositoryInterface
 
     /**
      * Optionally seed with initial data.
-     * 
+     *
      * @param User[] $initialUsers
      */
     public function __construct(array $initialUsers = [])

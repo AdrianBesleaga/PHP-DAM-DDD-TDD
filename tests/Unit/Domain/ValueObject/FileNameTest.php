@@ -6,7 +6,6 @@ namespace Tests\Unit\Domain\ValueObject;
 
 use App\Domain\ValueObject\FileName;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

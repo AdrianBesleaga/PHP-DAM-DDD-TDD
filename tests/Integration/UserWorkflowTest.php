@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Integration test — wires the REAL InMemoryUserRepository
  * to the UserService, testing the full stack without mocks.
- * 
+ *
  * This proves the layers work together correctly.
  */
 #[CoversClass(UserService::class)]

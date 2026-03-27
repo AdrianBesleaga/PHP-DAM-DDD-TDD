@@ -6,7 +6,7 @@ namespace App\Domain\ValueObject;
 
 /**
  * Value Object representing a User's unique identifier.
- * 
+ *
  * Value Objects are immutable and compared by value, not identity.
  * This is a core DDD tactical pattern — wrapping primitive types
  * in domain-meaningful objects that enforce invariants.

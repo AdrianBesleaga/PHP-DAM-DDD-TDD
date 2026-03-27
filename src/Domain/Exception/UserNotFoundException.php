@@ -6,7 +6,7 @@ namespace App\Domain\Exception;
 
 /**
  * Domain exception thrown when a requested User is not found.
- * 
+ *
  * This is a domain-level concept — the "not found" is a business concern,
  * not an infrastructure concern. The HTTP 404 mapping happens in the UI layer.
  */

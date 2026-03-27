@@ -21,11 +21,11 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for UserService.
- * 
+ *
  * KEY INTERVIEW POINT: Because UserService depends on UserRepositoryInterface,
  * we can mock that interface and test the service in COMPLETE ISOLATION
  * from any database or infrastructure.
- * 
+ *
  * This is the payoff of Dependency Inversion.
  */
 #[CoversClass(UserService::class)]
@@ -144,7 +144,9 @@ final class UserServiceTest extends TestCase
         $dto = new CreateUserDTO(name: 'Duplicate', email: 'alice@example.com');
 
         $existingUser = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
         );
 
         $this->repository
@@ -166,7 +168,9 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $existingUser = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
         );
 
         $this->repository
@@ -191,7 +195,9 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $existingUser = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
         );
 
         $this->repository
@@ -220,11 +226,15 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $existingUser = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
         );
 
         $otherUser = new User(
-            new UserId(2), 'Bob', new Email('bob@example.com'),
+            new UserId(2),
+            'Bob',
+            new Email('bob@example.com'),
         );
 
         $this->repository
@@ -250,7 +260,9 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $user = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
             status: UserStatus::Active,
         );
 
@@ -269,7 +281,9 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $user = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
             status: UserStatus::Inactive,
         );
 
@@ -288,7 +302,9 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $user = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
             status: UserStatus::Suspended,
         );
 
@@ -309,7 +325,9 @@ final class UserServiceTest extends TestCase
     {
         // Arrange
         $user = new User(
-            new UserId(1), 'Alice', new Email('alice@example.com'),
+            new UserId(1),
+            'Alice',
+            new Email('alice@example.com'),
         );
 
         $this->repository->method('findById')->willReturn($user);

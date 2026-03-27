@@ -18,6 +18,7 @@ final readonly class CreateFolderDTO
     /**
      * @throws \InvalidArgumentException
      */
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
         if (!isset($data['name']) || trim($data['name']) === '') {

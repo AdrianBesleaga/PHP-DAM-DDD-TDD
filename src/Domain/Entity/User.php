@@ -12,7 +12,7 @@ use App\Domain\ValueObject\UserStatus;
 
 /**
  * User Entity — an aggregate root in our domain.
- * 
+ *
  * Key DDD concepts demonstrated:
  * - Identity: Users are identified by their UserId, not by comparing all fields.
  * - Encapsulation: State changes go through methods that enforce business rules.
@@ -149,6 +149,7 @@ final class User
      * Serialize to a plain array for API responses.
      * This is an "anti-corruption layer" pattern — the Entity controls its own representation.
      */
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

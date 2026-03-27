@@ -38,6 +38,7 @@ final class Asset
     /** @var string[] */
     private array $tags;
 
+    /** @param string[] $tags */
     public function __construct(
         private readonly AssetId $id,
         private FileName $fileName,
@@ -293,6 +294,7 @@ final class Asset
 
     // ─── Serialization ───────────────────────────────────────────────
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

@@ -10,10 +10,10 @@ use App\Domain\ValueObject\UserId;
 
 /**
  * Port (Interface) for the User Repository.
- * 
+ *
  * This is the "Driven Port" in Hexagonal Architecture.
  * The Domain defines WHAT it needs; the Infrastructure provides HOW.
- * 
+ *
  * Key points for Java developers:
  * - This is exactly like a Spring Data Repository interface
  * - The Domain layer owns this interface (Dependency Inversion)

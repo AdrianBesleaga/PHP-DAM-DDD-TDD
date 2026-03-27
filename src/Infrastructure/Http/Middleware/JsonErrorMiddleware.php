@@ -81,7 +81,7 @@ final class JsonErrorMiddleware implements MiddlewareInterface
         }
 
         $response = $this->responseFactory->createResponse($statusCode);
-        $response->getBody()->write(json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $response->getBody()->write((string) json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return $response->withHeader('Content-Type', 'application/json');
     }

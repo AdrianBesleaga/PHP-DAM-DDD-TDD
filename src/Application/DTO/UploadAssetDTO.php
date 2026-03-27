@@ -23,6 +23,7 @@ final readonly class UploadAssetDTO
     /**
      * @throws \InvalidArgumentException
      */
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
         if (!isset($data['file_name']) || trim($data['file_name']) === '') {

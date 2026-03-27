@@ -6,7 +6,7 @@ namespace App\Domain\ValueObject;
 
 /**
  * Enum representing the possible states of a User.
- * 
+ *
  * PHP 8.1 enums are perfect for DDD — they constrain the domain
  * to only valid states, and the backed string gives us serialization for free.
  */

@@ -6,20 +6,19 @@ namespace Tests\Integration;
 
 use App\Application\DTO\CreateFolderDTO;
 use App\Application\DTO\UploadAssetDTO;
+use App\Application\EventHandler\LogAssetPublishedHandler;
 use App\Application\Service\AssetService;
 use App\Application\Service\FolderService;
-use App\Application\EventHandler\LogAssetPublishedHandler;
 use App\Domain\Exception\AssetNotFoundException;
 use App\Domain\Exception\FolderNotFoundException;
-use App\Domain\Exception\InvalidAssetTransitionException;
 use App\Domain\ValueObject\AssetStatus;
 use App\Infrastructure\Event\SimpleEventDispatcher;
 use App\Infrastructure\Persistence\InMemoryAssetRepository;
 use App\Infrastructure\Persistence\InMemoryFolderRepository;
-use Psr\Log\NullLogger;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * Integration test — wires real repositories to services,
@@ -77,7 +76,9 @@ final class AssetWorkflowTest extends TestCase
         $this->assertTrue($asset->hasTag('hero'));
 
         // 3. Cannot publish without description
-        $this->expectExceptionTemporary(\DomainException::class, fn() =>
+        $this->expectExceptionTemporary(
+            \DomainException::class,
+            fn() =>
             $this->assetService->publishAsset($asset->id()->value())
         );
 
@@ -159,10 +160,16 @@ final class AssetWorkflowTest extends TestCase
     public function it_assigns_sequential_asset_ids(): void
     {
         $a1 = $this->assetService->uploadAsset(new UploadAssetDTO(
-            fileName: 'one.jpg', fileSize: 100, mimeType: 'image/jpeg', uploadedBy: 1
+            fileName: 'one.jpg',
+            fileSize: 100,
+            mimeType: 'image/jpeg',
+            uploadedBy: 1
         ));
         $a2 = $this->assetService->uploadAsset(new UploadAssetDTO(
-            fileName: 'two.jpg', fileSize: 200, mimeType: 'image/jpeg', uploadedBy: 1
+            fileName: 'two.jpg',
+            fileSize: 200,
+            mimeType: 'image/jpeg',
+            uploadedBy: 1
         ));
 
         $this->assertSame(1, $a1->id()->value());
