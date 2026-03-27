@@ -56,7 +56,7 @@ $jwtSecret = $_ENV['JWT_SECRET'] ?? 'fallback-dev-secret';
 $app->addMiddleware(new JwtAuthMiddleware(
     responseFactory: $app->getResponseFactory(),
     jwtSecret: $jwtSecret,
-    publicPaths: ['/', '/graphql'],
+    publicPaths: ['/', '/graphql', '/api/health'],
 ));
 
 // CORS — allows cross-origin requests from frontend apps
@@ -130,6 +130,21 @@ $app->get('/', function (Request $request, Response $response) {
     ];
 
     $response->getBody()->write((string) json_encode($info, JSON_PRETTY_PRINT));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+// --- Health Check (for Docker / K8s / Load Balancers) ---
+$app->get('/api/health', function (Request $request, Response $response) {
+    $health = [
+        'status' => 'healthy',
+        'timestamp' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+        'checks' => [
+            'php_version' => PHP_VERSION,
+            'memory_usage' => round(memory_get_usage(true) / 1024 / 1024, 1) . ' MB',
+        ],
+    ];
+
+    $response->getBody()->write((string) json_encode($health, JSON_PRETTY_PRINT));
     return $response->withHeader('Content-Type', 'application/json');
 });
 

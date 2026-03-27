@@ -1,0 +1,38 @@
+# Dependencies
+vendor/
+node_modules/
+
+# Dev tools & config
+tests/
+phpunit.xml
+phpstan.neon
+.php-cs-fixer.dist.php
+.php-cs-fixer.cache
+
+# Documentation
+docs/
+README.md
+QUESTIONS.md
+
+# Version control
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+
+# Environment (secrets)
+.env
+.env.example
+
+# Docker (avoid recursive builds)
+Dockerfile
+docker-compose.yml
+docker/
+.dockerignore
+
+# Dev artifacts
+var/
+*.sqlite
+*.cache

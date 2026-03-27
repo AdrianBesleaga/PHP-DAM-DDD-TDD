@@ -1,0 +1,45 @@
+# ─── Docker Compose — Local Development Stack ───────────────────
+#
+# Usage:
+#   make up        → start all services
+#   make down      → stop all services
+#   make logs      → tail logs
+#   make shell     → shell into the app container
+
+services:
+  # PHP-FPM application server
+  app:
+    build:
+      context: .
+      target: production
+    volumes:
+      - ./src:/app/src:ro             # Live reload source (read-only)
+      - ./config:/app/config:ro
+      - ./public:/app/public:ro
+      - app-data:/app/var             # Persistent DB + logs
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-do-not-use-in-production-abc123}
+      - APP_ENV=development
+      - APP_DEBUG=true
+    networks:
+      - dam-network
+
+  # Nginx reverse proxy (production-like setup)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/app/public:ro       # Serve static files directly
+    depends_on:
+      - app
+    networks:
+      - dam-network
+
+volumes:
+  app-data:
+
+networks:
+  dam-network:
+    driver: bridge

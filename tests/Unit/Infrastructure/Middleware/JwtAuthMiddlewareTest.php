@@ -200,4 +200,3 @@ final class SpyRequestHandler implements RequestHandlerInterface
         return $response;
     }
 }
-

@@ -3,7 +3,7 @@
 A **Digital Asset Management (DAM)** system built with PHP 8.3, demonstrating Domain-Driven Design, Hexagonal Architecture, SOLID principles, ACID transactions, and Test-Driven Development.
 
 ```
-184 tests, 364 assertions — all passing
+210 tests, 413 assertions — all passing
 ```
 
 ---
@@ -85,8 +85,8 @@ Provides concrete implementations for the Domain's interfaces.
 | **InMemory Repos** | `InMemoryUserRepository`, etc. | Fast adapters for testing |
 | **Doctrine Repos** | `DoctrineUserRepository`, etc. | Production ACID adapters |
 | **Doctrine Types** | `EmailType`, `AssetStatusType`, `UserStatusType` | Map Value Objects to DB columns |
-| **HTTP Controllers** | `UserController`, `AssetController`, `FolderController` | Translate HTTP to Application use cases |
-| **Middleware** | `JsonErrorMiddleware` | Centralized error handling (SRP) |
+| **HTTP Controllers** | `UserController`, `AssetController`, `FolderController`, `GraphQLController` | Translate HTTP/GraphQL to Application use cases |
+| **Middleware** | `JwtAuthMiddleware`, `CorsMiddleware`, `SecurityHeadersMiddleware`, `JsonErrorMiddleware` | Cross-cutting concerns (auth, security, errors) |
 | **Event Dispatcher** | `SimpleEventDispatcher` | Routes events to handlers |
 
 ---
@@ -384,26 +384,88 @@ PUT    /api/folders/{id}         Rename a folder
 DELETE /api/folders/{id}         Delete a folder
 ```
 
+### GraphQL
+```
+POST   /graphql                  GraphQL endpoint
+```
+
+Example queries:
+```graphql
+{ users { id name email status } }
+{ asset(id: 1) { id fileName status tags } }
+{ folders { id name isRoot } }
+```
+
+### System
+```
+GET    /                         API index + route listing
+GET    /api/health               Health check (no auth required)
+```
+
+---
+
+## Security
+
+```
+Middleware Stack (execution order):
+
+  Request ──> JsonErrorMiddleware ──> SecurityHeaders ──> CORS ──> JWT Auth ──> Router ──> Controller
+                 catches errors         adds headers      CORS      validates
+                                                        preflight    token
+```
+
+| Layer | Mechanism | What it prevents |
+|-------|-----------|------------------|
+| **Value Objects** | `Email`, `FileName`, `MimeType` validation | Bad input at boundary |
+| **Doctrine ORM** | Parameterized queries (auto) | SQL injection |
+| **LIKE escaping** | `%` and `_` wildcard escaping | SQL wildcard injection |
+| **JWT Middleware** | Bearer token validation | Unauthorized access |
+| **Security Headers** | HSTS, CSP, X-Frame-Options, etc. | Clickjacking, MIME sniffing |
+| **CORS Middleware** | Origin allowlisting + OPTIONS preflight | Cross-origin abuse |
+| **Non-root Docker** | `appuser` in Dockerfile | Container escape |
+| **Env secrets** | `.env` gitignored, `.env.example` committed | Secret leakage |
+
 ---
 
 ## Quick Start
 
+### Option 1: Docker (recommended)
+```bash
+make up
+curl http://localhost:8080/api/health
+
+# Generate a test JWT token
+make token USER_ID=1
+
+# Use the token
+curl -H "Authorization: Bearer <token>" http://localhost:8080/api/users
+```
+
+### Option 2: Local PHP
 ```bash
 # Install dependencies
 composer install
 
+# Copy env file
+cp .env.example .env
+
 # Run tests
-composer test
+make quality
 
 # Start the dev server
 composer serve
 # -> http://localhost:8080
 
-# Try the API
-curl http://localhost:8080/
-curl http://localhost:8080/api/assets
-curl http://localhost:8080/api/folders
+# Generate a test JWT token
+php bin/generate-token.php --user-id=1
+```
 
-# (Optional) Create SQLite database for Doctrine
-composer db:create
+### Makefile Commands
+```bash
+make help        # Show all available commands
+make quality     # Run tests + PHPStan + CS-Fixer
+make up          # Docker Compose up
+make down        # Docker Compose down
+make token       # Generate test JWT token
+make ci          # Simulate full CI pipeline locally
 ```
