@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Listen for Xdebug",
+      "type": "php",
+      "request": "launch",
+      "port": 9003,
+      "pathMappings": {
+        "${workspaceFolder}": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Debug PHPUnit Test",
+      "type": "php",
+      "request": "launch",
+      "port": 9003,
+      "program": "${workspaceFolder}/vendor/bin/phpunit",
+      "args": ["${file}"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "XDEBUG_MODE": "debug"
+      }
+    },
+    {
+      "name": "Debug Current Test Method",
+      "type": "php",
+      "request": "launch",
+      "port": 9003,
+      "program": "${workspaceFolder}/vendor/bin/phpunit",
+      "args": ["--filter", "${selectedText}", "${file}"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "XDEBUG_MODE": "debug"
+      }
+    }
+  ]
+}
